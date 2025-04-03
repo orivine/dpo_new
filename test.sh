@@ -5,8 +5,14 @@
 # export MOONSHOT_API_KEY="your_api_key_here"
 
 # ACCELERATE_LOG_LEVEL=info accelerate launch --config_file accelerate_configs/deepspeed_zero3.yaml scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml
+####
+# WANDB_DISABLED=1 PYTHONPATH=/home/kewenjun/VL-Embedding_7/dpo_new python scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run.log
+####
 
-WANDB_DISABLED=1 PYTHONPATH=/home/kewenjun/VL-Embedding_7/dpo_new python scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run.log
+# 使用修改后的multi_gpu.yaml配置文件启动训练
+WANDB_DISABLED=1 PYTHONPATH=/home/kewenjun/VL-Embedding_7/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
+--config_file accelerate_configs/multi_gpu.yaml \
+scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run.log
 
 # 如果要禁用实体加权，可以添加以下参数
 # WANDB_DISABLED=1 PYTHONPATH=/data02/wenwantao/Simpo_test2 python scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml --use_entity_weighting=False 2>&1 | tee run_test2.log
