@@ -285,7 +285,19 @@ class EntityExtractor:
         entities = self.extract_entities(prompt)
         if not entities:
             logger.warning(f"未能从文本中提取到关键实体: {prompt[:100]}...")
-            return {"chosen_mask": None, "rejected_mask": None, "entities": []}
+            # 创建与文本长度匹配的空掩码，而不是返回None
+            chosen_tokens = tokenizer.tokenize(chosen)
+            rejected_tokens = tokenizer.tokenize(rejected)
+            chosen_mask = [0] * len(chosen_tokens)
+            rejected_mask = [0] * len(rejected_tokens)
+            
+            return {
+                "chosen_mask": chosen_mask,
+                "rejected_mask": rejected_mask,
+                "entities": [],
+                "chosen_highlight": chosen,
+                "rejected_highlight": rejected
+            }
         
         # logger.info(f"提取到的关键实体: {entities}")
         
