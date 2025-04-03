@@ -449,9 +449,9 @@ class SimPOTrainer(Trainer):
         # 打印简要统计信息
         chosen_percent = record['chosen_mask_stats']['non_zero_percentage']
         rejected_percent = record['rejected_mask_stats']['non_zero_percentage']
-        print(f"已记录掩码数据 - 实体数: {len(entities) if entities else 0}, "
-              f"chosen掩码非零比例: {chosen_percent}%, "
-              f"rejected掩码非零比例: {rejected_percent}%")
+        # print(f"已记录掩码数据 - 实体数: {len(entities) if entities else 0}, "
+            #   f"chosen掩码非零比例: {chosen_percent}%, "
+            #   f"rejected掩码非零比例: {rejected_percent}%")
               
         # 也保存在内存中
         self.mask_records.append(record)
@@ -481,7 +481,7 @@ class SimPOTrainer(Trainer):
         rejected_highlight = None
         if self.use_entity_weighting and self.entity_extractor is not None:
             try:
-                print(f"为数据创建实体掩码: prompt={prompt[:50]}...")
+                # print(f"为数据创建实体掩码: prompt={prompt[:50]}...")
                 masks_data = self.entity_extractor.create_entity_masks(
                     self.tokenizer, prompt_original, chosen, rejected      # 使用原始prompt提取实体，而不是apply_chat_template后的prompt，避免提取实体时收到干扰
                 )
