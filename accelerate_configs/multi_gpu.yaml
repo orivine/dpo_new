@@ -2,7 +2,7 @@ compute_environment: LOCAL_MACHINE
 debug: false
 distributed_type: MULTI_GPU
 downcast_bf16: 'no'
-gpu_ids: 0,1,2,3
+gpu_ids: 0,1,2,3    # 需要包含0卡，不用0卡需要设置cuda_visible_devices
 machine_rank: 0
 main_training_function: main
 mixed_precision: bf16
