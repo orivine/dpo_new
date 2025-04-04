@@ -1,0 +1,55 @@
+# Model arguments
+# model_name_or_path: meta-llama/Meta-Llama-3-8B-Instruct
+model_name_or_path: /home/kewenjun/VL-Embedding_6/models/Meta-Llama-3-8B-Instruct
+torch_dtype: null   # 原null
+attn_implementation: flash_attention_2
+
+# Data training arguments
+dataset_mixer:
+  /home/kewenjun/VL-Embedding_7/dpo_new/dataset/llama3-ultrafeedback/: 1.0   #原princeton-nlp/llama3-ultrafeedback
+dataset_splits:
+- train
+- test
+preprocessing_num_workers: 12
+
+# SimPOTrainer arguments
+bf16: true
+beta: 2.5
+gamma_beta_ratio: 0.55
+do_eval: true
+evaluation_strategy: steps
+eval_steps: 400
+gradient_accumulation_steps: 4      # 原16，降低为4以增加训练步数
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: False
+hub_model_id: simpo-exps
+learning_rate: 1.0e-6
+log_level: info
+logging_steps: 1                    # 原5，更改为1以查看每一步的日志
+lr_scheduler_type: cosine
+max_length: 2048
+max_prompt_length: 1800
+num_train_epochs: 1
+optim: adamw_torch
+output_dir: outputs/llama-3-8b-instruct-simpo
+run_name: llama-3-8b-instruct-simpo
+per_device_train_batch_size: 2        ## 原2
+per_device_eval_batch_size: 1   # 4
+push_to_hub: false
+save_strategy: "steps"
+save_steps: 1000000
+report_to: 
+# - wandb
+save_total_limit: 20
+seed: 42
+warmup_ratio: 0.1
+
+# 实体加权相关参数
+use_entity_weighting: true 
+entity_weight_chosen: 0.5
+entity_weight_rejected: 1.5
+apply_entity_weighting_during_eval: false
+save_mask_records: false
+# Moonshot API密钥，如已在环境变量中设置，可以省略此项
+moonshot_api_key: ""
