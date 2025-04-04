@@ -103,7 +103,7 @@ class EntityExtractor:
         
         # 检查缓存中是否存在
         if cache_key in self.cache:
-            # logger.info(f"缓存中已存在实体列表: {cache_key[:10]}...")
+            # logger.info(f"缓存中已存在实体列表: {cache_key[:10]}...")     # 日志：实体提取
             return self.cache[cache_key]
         
         # 如果处于离线模式，使用简单的规则提取关键词
@@ -299,7 +299,7 @@ class EntityExtractor:
                 "rejected_highlight": rejected
             }
         
-        # logger.info(f"提取到的关键实体: {entities}")
+        # logger.info(f"提取到的关键实体: {entities}")     # 日志：实体提取
         
         # 为chosen和rejected创建掩码
         chosen_mask = self._create_mask_for_text(tokenizer, chosen, entities)

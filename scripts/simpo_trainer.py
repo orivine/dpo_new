@@ -273,6 +273,8 @@ class SimPOTrainer(Trainer):
         self.use_entity_weighting = getattr(args, "use_entity_weighting", False)
         self.entity_weight_chosen = getattr(args, "entity_weight_chosen", 0.5)
         self.entity_weight_rejected = getattr(args, "entity_weight_rejected", 1.5)
+        self.apply_entity_weighting_during_eval = getattr(args, "apply_entity_weighting_during_eval", False)
+        self.save_mask_records = getattr(args, "save_mask_records", False)
         
         # 初始化实体抽取器
         self.entity_extractor = None
@@ -305,15 +307,19 @@ class SimPOTrainer(Trainer):
 
         self._stored_metrics = defaultdict(lambda: defaultdict(list))
 
-        # 初始化掩码记录
+        # 初始化掩码记录，根据save_mask_records参数决定是否保存
         self.mask_records = []
-        self.mask_record_file = os.path.join(args.output_dir, "mask_records.jsonl")
-        print(f"掩码记录将保存到: {self.mask_record_file}")
-        # 创建目录（如果不存在）
-        os.makedirs(os.path.dirname(self.mask_record_file), exist_ok=True)
-        # 清空已有文件
-        with open(self.mask_record_file, "w") as f:
-            f.write("")
+        self.mask_record_file = None
+        if self.save_mask_records:
+            self.mask_record_file = os.path.join(args.output_dir, "mask_records.jsonl")
+            print(f"掩码记录将保存到: {self.mask_record_file}")
+            # 创建目录（如果不存在）
+            os.makedirs(os.path.dirname(self.mask_record_file), exist_ok=True)
+            # 清空已有文件
+            with open(self.mask_record_file, "w") as f:
+                f.write("")
+        else:
+            print("掩码记录功能已禁用，将不保存mask_records.jsonl文件")
 
         # Compute that only on the main process for faster data processing.
         # see: https://github.com/huggingface/trl/pull/1255
@@ -408,6 +414,10 @@ class SimPOTrainer(Trainer):
             chosen_highlight: 带有高亮标记的chosen文本
             rejected_highlight: 带有高亮标记的rejected文本
         """
+        # 如果不保存掩码记录，直接返回
+        if not self.save_mask_records:
+            return
+            
         record = {
             # "prompt": feature["prompt"][:200] + "..." if len(feature["prompt"]) > 200 else feature["prompt"],
             "prompt": feature["prompt"],
@@ -442,14 +452,15 @@ class SimPOTrainer(Trainer):
         }
         
         # 保存记录到文件
-        with open(self.mask_record_file, "a", encoding="utf-8") as f:
-            # f.write(json.dumps(record, ensure_ascii=False) + "\n")
-            f.write(json.dumps(simplified_record, ensure_ascii=False) + "\n")
+        if self.mask_record_file:
+            with open(self.mask_record_file, "a", encoding="utf-8") as f:
+                # f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                f.write(json.dumps(simplified_record, ensure_ascii=False) + "\n")
         
         # 打印简要统计信息
         chosen_percent = record['chosen_mask_stats']['non_zero_percentage']
         rejected_percent = record['rejected_mask_stats']['non_zero_percentage']
-        # print(f"已记录掩码数据 - 实体数: {len(entities) if entities else 0}, "
+        # print(f"已记录掩码数据 - 实体数: {len(entities) if entities else 0}, "    # 日志：实体提取
             #   f"chosen掩码非零比例: {chosen_percent}%, "
             #   f"rejected掩码非零比例: {rejected_percent}%")
               
@@ -481,7 +492,7 @@ class SimPOTrainer(Trainer):
         rejected_highlight = None
         if self.use_entity_weighting and self.entity_extractor is not None:
             try:
-                # print(f"为数据创建实体掩码: prompt={prompt[:50]}...")
+                # print(f"为数据创建实体掩码: prompt={prompt[:50]}...")   # 日志：实体提取
                 masks_data = self.entity_extractor.create_entity_masks(
                     self.tokenizer, prompt_original, chosen, rejected      # 使用原始prompt提取实体，而不是apply_chat_template后的prompt，避免提取实体时收到干扰
                 )
@@ -827,7 +838,7 @@ class SimPOTrainer(Trainer):
         return losses, chosen_rewards, rejected_rewards
 
     def concatenated_forward(
-        self, model: nn.Module, batch: Dict[str, Union[List, torch.LongTensor]]
+        self, model: nn.Module, batch: Dict[str, Union[List, torch.LongTensor]], train_eval: Literal["train", "eval"] = "train"
     ) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
         """Run the given model on the given batch of inputs, concatenating the chosen and rejected inputs together.
 
@@ -868,7 +879,9 @@ class SimPOTrainer(Trainer):
         # 获取token权重，如果有的话
         token_weights_chosen = None
         token_weights_rejected = None
-        if self.use_entity_weighting and "concatenated_token_weights" in concatenated_batch:
+        # 根据当前阶段和配置决定是否应用实体加权
+        apply_weighting = self.use_entity_weighting and (train_eval == "train" or self.apply_entity_weighting_during_eval)
+        if apply_weighting and "concatenated_token_weights" in concatenated_batch:
             token_weights = concatenated_batch["concatenated_token_weights"]
             token_weights_chosen = token_weights[:len_chosen] if token_weights is not None else None
             token_weights_rejected = token_weights[len_chosen:] if token_weights is not None else None
@@ -937,14 +950,14 @@ class SimPOTrainer(Trainer):
             if token_weights is not None:
                 token_weights = token_weights[:, 1:]
 
-        # 添加调试信息：每个批次处理前打印掩码信息
-        if token_weights is not None:
-            print(f"损失函数调试 - {'chosen' if is_chosen else 'rejected'}回答:")
-            print(f"  权重形状: {token_weights.shape}")
-            # 计算非零权重的百分比
-            non_zero_percentage = (token_weights > 0).float().mean().item() * 100
-            print(f"  非零权重百分比: {non_zero_percentage:.2f}%")
-            print(f"  将使用权重乘数: {weight_chosen if is_chosen else weight_rejected}")
+        # 添加调试信息：每个批次处理前打印掩码信息         日志：实体提取
+        # if token_weights is not None:
+        #     print(f"损失函数调试 - {'chosen' if is_chosen else 'rejected'}回答:")
+        #     print(f"  权重形状: {token_weights.shape}")
+        #     # 计算非零权重的百分比
+        #     non_zero_percentage = (token_weights > 0).float().mean().item() * 100
+        #     print(f"  非零权重百分比: {non_zero_percentage:.2f}%")
+        #     print(f"  将使用权重乘数: {weight_chosen if is_chosen else weight_rejected}")
         
         loss_mask = labels != label_pad_token_id   # torch.nonzero(loss_mask).shape = torch.Size([999, 2]), torch.nonzero(labels).shape = torch.Size([997, 2])，loss_mask不为零的元素更多的原因是因为，原本labels中有一些元素就是0，这样的元素会因为不是padding元素所以在loss_mask中为True (1)，而在labels检查的时候天然为0
 
@@ -997,7 +1010,7 @@ class SimPOTrainer(Trainer):
             policy_chosen_logits,
             policy_rejected_logits,
             chosen_labels,
-        ) = self.concatenated_forward(model, batch)
+        ) = self.concatenated_forward(model, batch, train_eval)
 
         losses, chosen_rewards, rejected_rewards = self.simpo_loss(
             policy_chosen_logps,

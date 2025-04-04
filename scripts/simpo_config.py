@@ -53,6 +53,10 @@ class SimPOConfig(TrainingArguments):
             Weight multiplier for key entity tokens in rejected responses (<1 to de-emphasize).
         moonshot_api_key (`Optional[str]`, defaults to `None`):
             API key for Moonshot API. If None, will try to get from environment variable.
+        apply_entity_weighting_during_eval (`bool`, defaults to `False`):
+            Whether to apply entity weighting during evaluation. If False, entity weighting will only be applied during training.
+        save_mask_records (`bool`, defaults to `False`):
+            Whether to save mask records to a JSONL file. Set to False to reduce memory usage and avoid file conflicts.
     """
     
     max_length: Optional[int] = None
@@ -82,4 +86,6 @@ class SimPOConfig(TrainingArguments):
     entity_weight_chosen: float = 0.5
     entity_weight_rejected: float = 1.5
     moonshot_api_key: Optional[str] = "sk-yAx4wtCUkyDakfury04dmMDtiCTT07tC2UypQMz7E2rkDVQj"
+    apply_entity_weighting_during_eval: bool = False
+    save_mask_records: bool = False
 
