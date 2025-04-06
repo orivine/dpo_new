@@ -200,7 +200,7 @@ def main():
         num_proc=data_args.preprocessing_num_workers,
         remove_columns=column_names,
         desc="Formatting comparisons with prompt template",
-        load_from_cache_file=False,
+        load_from_cache_file=True,
     )
 
     # Replace column names with what TRL needs, text_chosen -> chosen and text_rejected -> rejected
