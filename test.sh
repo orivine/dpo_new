@@ -10,7 +10,7 @@
 ####
 
 # 使用deepspeed配置文件启动训练, 8b模型
-CUDA_VISIBLE_DEVICES=0,1,2,3 WANDB_DISABLED=1 PYTHONPATH=/root/autodl-tmp/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
+CUDA_VISIBLE_DEVICES=0,1,2,3 PYTHONPATH=/root/autodl-tmp/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
 --config_file accelerate_configs/deepspeed_zero3.yaml \
 scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run_8b.log
 
