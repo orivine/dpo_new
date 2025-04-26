@@ -2,7 +2,7 @@ compute_environment: LOCAL_MACHINE
 debug: false
 deepspeed_config:
   deepspeed_multinode_launcher: standard
-  offload_optimizer_device: cpu   # 可使用cpu缓解显存压力
+  offload_optimizer_device: none   # 可使用cpu缓解显存压力
   offload_param_device: none           # 可使用cpu缓解显存压力
   zero3_init_flag: true               # 原true
   zero3_save_16bit_model: true

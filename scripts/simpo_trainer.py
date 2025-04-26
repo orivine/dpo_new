@@ -107,11 +107,11 @@ class SimPOTrainer(Trainer):
             raise ValueError("You passed model_kwargs to the SimPOTrainer. But your model is already instantiated.")
         else:
             model_init_kwargs = args.model_init_kwargs
-            model_init_kwargs["torch_dtype"] = (
-                model_init_kwargs["torch_dtype"]
-                if model_init_kwargs["torch_dtype"] in ["auto", None]
-                else getattr(torch, model_init_kwargs["torch_dtype"])
-            )
+            # 修复处理torch_dtype的代码
+            if "torch_dtype" in model_init_kwargs and model_init_kwargs["torch_dtype"] not in ["auto", None]:
+                if isinstance(model_init_kwargs["torch_dtype"], str):
+                    model_init_kwargs["torch_dtype"] = getattr(torch, model_init_kwargs["torch_dtype"])
+                # 如果torch_dtype已经是torch类型，则无需转换
 
         if isinstance(model, str):
             warnings.warn(

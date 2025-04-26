@@ -1,7 +1,6 @@
 # Model arguments
-# model_name_or_path: meta-llama/Meta-Llama-3-8B-Instruct
-model_name_or_path: /root/autodl-tmp/LLMs/llama-3-8b-instruct
-torch_dtype: "float16"   # 原null
+model_name_or_path: /root/autodl-tmp/LLMs/llama-3_2-1b-instruct
+torch_dtype: null   # 原null
 attn_implementation: flash_attention_2
 
 # Data training arguments
@@ -19,7 +18,7 @@ gamma_beta_ratio: 0.55
 do_eval: true
 evaluation_strategy: steps
 eval_steps: 400
-gradient_accumulation_steps: 32      # 原16，降低为4以增加训练步数
+gradient_accumulation_steps: 2      # 原16，降低为4以增加训练步数
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: False
@@ -32,23 +31,23 @@ max_length: 2048
 max_prompt_length: 1800
 num_train_epochs: 1
 optim: adamw_torch
-output_dir: outputs/llama-3-8b-instruct-simpo
-run_name: llama-3-8b-instruct-simpo
-per_device_train_batch_size: 1        ## 原2
-per_device_eval_batch_size: 1   # 4
+output_dir: outputs/llama-3_2-1b-instruct-simpo
+run_name: llama-3_2-1b-instruct-simpo
+per_device_train_batch_size: 4        ## 原2
+per_device_eval_batch_size: 4   # 4
 push_to_hub: false
 save_strategy: "steps"
 save_steps: 1000000
 report_to: 
-- wandb
+# - wandb
 save_total_limit: 20
 seed: 42
 warmup_ratio: 0.1
 
 # 实体加权相关参数
-use_entity_weighting: true 
-entity_weight_chosen: 0.9
-entity_weight_rejected: 0.9
+use_entity_weighting: false
+entity_weight_chosen: 0.5
+entity_weight_rejected: 1.5
 apply_entity_weighting_during_eval: false
 save_mask_records: false
 # Moonshot API密钥，如已在环境变量中设置，可以省略此项

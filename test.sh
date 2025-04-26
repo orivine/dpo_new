@@ -9,10 +9,16 @@
 # WANDB_DISABLED=1 PYTHONPATH=/home/kewenjun/VL-Embedding_7/dpo_new python scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run.log
 ####
 
-# 使用修改后的multi_gpu.yaml配置文件启动训练
-CUDA_VISIBLE_DEVICES=0,1,2,3 WANDB_DISABLED=1 PYTHONPATH=/home/kewenjun/VL-Embedding_7/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
+# 使用deepspeed配置文件启动训练, 8b模型
+CUDA_VISIBLE_DEVICES=0,1,2,3 WANDB_DISABLED=1 PYTHONPATH=/root/autodl-tmp/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
 --config_file accelerate_configs/deepspeed_zero3.yaml \
-scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run.log
+scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml 2>&1 | tee run_8b.log
+
+
+# 使用deepspeed配置文件启动训练, 1b模型
+# CUDA_VISIBLE_DEVICES=0,1,2,3 WANDB_DISABLED=1 PYTHONPATH=/root/autodl-tmp/dpo_new ACCELERATE_LOG_LEVEL=info accelerate launch \
+# --config_file accelerate_configs/deepspeed_zero3.yaml \
+# scripts/run_simpo.py training_configs/llama-3_2-1b-instruct-simpo.yaml 2>&1 | tee run_1b.log
 
 # 如果要禁用实体加权，可以添加以下参数
 # WANDB_DISABLED=1 PYTHONPATH=/data02/wenwantao/Simpo_test2 python scripts/run_simpo.py training_configs/llama-3-8b-instruct-simpo.yaml --use_entity_weighting=False 2>&1 | tee run_test2.log

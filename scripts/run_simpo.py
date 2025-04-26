@@ -102,7 +102,7 @@ def apply_chat_template(
             if auto_insert_empty_system_msg:
                 maybe_insert_system_message(prompt_messages, tokenizer)
 
-            example["prompt_original"] = prompt_messages[1]["content"]           # 添加一个prompt_original，用于保存原始数据集的prompt
+            example["prompt_original"] = prompt_messages[0]["content"]           # 添加一个prompt_original，用于保存原始数据集的prompt
             example["text_prompt"] = tokenizer.apply_chat_template(prompt_messages, tokenize=False)
             example["text_chosen"] = tokenizer.apply_chat_template(chosen_messages, tokenize=False)
             if example["text_chosen"].startswith(tokenizer.bos_token):
