@@ -56,7 +56,7 @@ def parse_args():
     parser.add_argument(
         "--top_p",
         type=float,
-        default=0.9,
+        default=1,
         help="top-p采样参数"
     )
     parser.add_argument(
